@@ -35,79 +35,29 @@ function findDirs(basePath, prefix) {
 function getSensors() {
 	let sensors = [];
 
-	// Canonical device paths backing each thermal_zone, used to dedup the
-	// same physical sensor when it is also exposed via hwmon (see below).
-	let thermalDeviceIds = {};
-	// Thermal-zone type names (lower-cased), used as a fallback dedup when
-	// an hwmon exposes the same sensor under the identical name.
-	let thermalNames = {};
+	// Prefer hwmon sensors and add thermal_zone sensors only when they are
+	// not already represented by an hwmon device. This follows the same
+	// principle as luci-app-temp-status and avoids temperature based dedup.
+	let hwmonDeviceIds = {};
+	let hwmonPathIds = {};
 
-	// === 1. Read thermal_zone sensors ===
-	let thermalZones = findDirs('/sys/class/thermal', 'thermal_zone');
-
-	for (let zonePath in thermalZones) {
-		let temp = readFileContent(zonePath + '/temp');
-		if (temp == null) continue;
-
-		let tempValue = +temp;
-		if (tempValue != tempValue) continue; // NaN check
-
-		let type = readFileContent(zonePath + '/type') || 'thermal';
-		thermalNames[lc(type)] = true;
-
-		// Record identities so an hwmon node exposing the same physical
-		// sensor can be recognised as a true duplicate:
-		//  - the zone's own canonical path: the thermal framework's
-		//    auto-created hwmon points its `device` link at the zone
-		//    itself (this is the CPU/thermal_zone <-> hwmon case);
-		//  - the zone's backing device: for sensors exposed both as a
-		//    zone and a sibling hwmon of the same device.
-		let zoneSelfId = realpath(zonePath);
-		if (zoneSelfId != null)
-			thermalDeviceIds[zoneSelfId] = true;
-		let zoneDevId = realpath(zonePath + '/device');
-		if (zoneDevId != null)
-			thermalDeviceIds[zoneDevId] = true;
-
-		// Update peak temperature
-		let key = zonePath;
-		if (peakTemps[key] == null || tempValue > peakTemps[key]) {
-			peakTemps[key] = tempValue;
-		}
-
-		push(sensors, {
-			name: type,
-			temp: tempValue,
-			peak: peakTemps[key],
-			path: zonePath,
-			source: 'thermal_zone'
-		});
-	}
-	
-	// === 2. Read hwmon sensors ===
+	// === 1. Read hwmon sensors ===
 	let hwmonDirs = findDirs('/sys/class/hwmon', 'hwmon');
 	
 	for (let hwmonPath in hwmonDirs) {
 		let deviceName = readFileContent(hwmonPath + '/name') || 'hwmon';
-
-		// An hwmon node is only a duplicate of a thermal_zone when both
-		// resolve to the *same* physical device. Comparing temperature
-		// values instead (the previous approach) wrongly dropped distinct
-		// sensors whose readings happened to be close — e.g. an MT7915
-		// radio hovering within a couple of degrees of the SoC zone would
-		// flicker in and out as the temperatures drifted. Identity is
-		// stable, so the sensor list no longer flickers.
 		let hwmonDevId = realpath(hwmonPath + '/device');
-		let isDuplicate =
-			hwmonDevId != null && thermalDeviceIds[hwmonDevId] == true;
+		let hwmonPathId = realpath(hwmonPath);
+		let hasTempSensor = false;
 
 		// Find all temp*_input files
 		let files = lsdir(hwmonPath);
 		if (!files) continue;
 
 		for (let file in files) {
-			// Check if file matches temp*_input pattern
-			if (index(file, 'temp') != 0 || index(file, '_input') < 0)
+			// Check if file exactly matches temp*_input.
+			// Do not accept files such as temp1_input_alarm.
+			if (!match(file, /^temp[0-9]+_input$/))
 				continue;
 			
 			let tempPath = hwmonPath + '/' + file;
@@ -126,28 +76,78 @@ function getSensors() {
 			
 			let sensorName = label || deviceName;
 
-			// Also treat it as a duplicate when the hwmon exposes the
-			// exact same sensor name as a thermal zone (e.g. both report
-			// "Processor Thermal") — covers setups where the device
-			// symlinks don't line up.
-			let dup = isDuplicate || thermalNames[lc(sensorName)] == true;
+			// Update peak temperature
+			let key = tempPath;
+			if (peakTemps[key] == null || tempValue > peakTemps[key]) {
+				peakTemps[key] = tempValue;
+			}
 
-			if (!dup) {
-				// Update peak temperature
-				let key = tempPath;
-				if (peakTemps[key] == null || tempValue > peakTemps[key]) {
-					peakTemps[key] = tempValue;
+			push(sensors, {
+				name: sensorName,
+				temp: tempValue,
+				peak: peakTemps[key],
+				path: tempPath,
+				source: 'hwmon'
+			});
+
+			hasTempSensor = true;
+		}
+
+		if (hasTempSensor) {
+			if (hwmonDevId != null)
+				hwmonDeviceIds[hwmonDevId] = true;
+
+			if (hwmonPathId != null)
+				hwmonPathIds[hwmonPathId] = true;
+		}
+	}
+
+	// === 2. Read thermal_zone sensors ===
+	let thermalZones = findDirs('/sys/class/thermal', 'thermal_zone');
+
+	for (let zonePath in thermalZones) {
+		let zonePathId = realpath(zonePath);
+		let zoneDevId = realpath(zonePath + '/device');
+		let isDuplicate =
+			(zonePathId != null && hwmonDeviceIds[zonePathId] == true) ||
+			(zoneDevId != null && hwmonDeviceIds[zoneDevId] == true);
+
+		// Some thermal-zone backed hwmon nodes are exposed below the
+		// thermal_zone sysfs path itself. Catch that form as well, even
+		// when the hwmon device symlink is missing or not comparable.
+		if (!isDuplicate && zonePathId != null) {
+			for (let hwmonPathId in hwmonPathIds) {
+				if (hwmonPathId == zonePathId || index(hwmonPathId, zonePathId + '/') == 0) {
+					isDuplicate = true;
+					break;
 				}
-				
-				push(sensors, {
-					name: sensorName,
-					temp: tempValue,
-					peak: peakTemps[key],
-					path: tempPath,
-					source: 'hwmon'
-				});
 			}
 		}
+
+		if (isDuplicate)
+			continue;
+
+		let temp = readFileContent(zonePath + '/temp');
+		if (temp == null) continue;
+
+		let tempValue = +temp;
+		if (tempValue != tempValue) continue; // NaN check
+
+		let type = readFileContent(zonePath + '/type') || 'thermal';
+
+		// Update peak temperature
+		let key = zonePath;
+		if (peakTemps[key] == null || tempValue > peakTemps[key]) {
+			peakTemps[key] = tempValue;
+		}
+
+		push(sensors, {
+			name: type,
+			temp: tempValue,
+			peak: peakTemps[key],
+			path: zonePath,
+			source: 'thermal_zone'
+		});
 	}
 	
 	return { sensors: sensors };
