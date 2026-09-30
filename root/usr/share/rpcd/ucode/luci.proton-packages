@@ -108,7 +108,9 @@ function installLocal(request) {
 
 	let code = 255;
 	if (proc) {
-		code = int(trim(proc.read('all') || '')) ?? 255;
+		let parsed = int(trim(proc.read('all') || ''));
+		if (type(parsed) == 'int')
+			code = parsed;
 		proc.close();
 	}
 

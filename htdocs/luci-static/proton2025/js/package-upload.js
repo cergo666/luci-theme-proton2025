@@ -75,50 +75,57 @@
       return path === "/tmp/upload.apk" || path === "/tmp/upload.ipk";
     };
 
-    ui.uploadFile = function (path, progressStatusNode, info) {
-      if (!isPackageUploadPath(path)) {
-        return origUpload.apply(this, arguments);
-      }
+    // Replace the stock behaviour only when luci.proton-packages really answers
+    // (plugin installed, rpcd restarted, ACL granted). Otherwise the page stays
+    // exactly as LuCI ships it instead of getting a dialog that cannot install.
+    callCleanup([]).then(hook, function () {});
 
-      return uploadPackages(path);
-    };
-
-    fs.exec_direct = function (command, params) {
-      if (
-        pending &&
-        command === PM_CALL &&
-        Array.isArray(params) &&
-        params[0] === "install" &&
-        params.indexOf(pending.viewPath) !== -1
-      ) {
-        const batch = pending;
-        pending = null;
-
-        return callInstall(
-          batch.paths,
-          params.indexOf("--force-overwrite") !== -1,
-        );
-      }
-
-      return origExecDirect.apply(this, arguments);
-    };
-
-    // The stock view removes its own upload path after Cancel / Install. Our
-    // files live elsewhere: clean them up on Cancel, and keep the stock call
-    // (the path it names does not exist in this flow) from raising an error.
-    fs.remove = function (path) {
-      if (isPackageUploadPath(path)) {
-        if (pending && pending.viewPath === path) {
-          const batch = pending;
-          pending = null;
-          callCleanup(batch.paths).catch(function () {});
+    function hook() {
+      ui.uploadFile = function (path, progressStatusNode, info) {
+        if (!isPackageUploadPath(path)) {
+          return origUpload.apply(this, arguments);
         }
 
-        return origRemove.apply(this, arguments).catch(function () {});
-      }
+        return uploadPackages(path);
+      };
 
-      return origRemove.apply(this, arguments);
-    };
+      fs.exec_direct = function (command, params) {
+        if (
+          pending &&
+          command === PM_CALL &&
+          Array.isArray(params) &&
+          params[0] === "install" &&
+          params.indexOf(pending.viewPath) !== -1
+        ) {
+          const batch = pending;
+          pending = null;
+
+          return callInstall(
+            batch.paths,
+            params.indexOf("--force-overwrite") !== -1,
+          );
+        }
+
+        return origExecDirect.apply(this, arguments);
+      };
+
+      // The stock view removes its own upload path after Cancel / Install. Our
+      // files live elsewhere: clean them up on Cancel, and keep the stock call
+      // (the path it names does not exist in this flow) from raising an error.
+      fs.remove = function (path) {
+        if (isPackageUploadPath(path)) {
+          if (pending && pending.viewPath === path) {
+            const batch = pending;
+            pending = null;
+            callCleanup(batch.paths).catch(function () {});
+          }
+
+          return origRemove.apply(this, arguments).catch(function () {});
+        }
+
+        return origRemove.apply(this, arguments);
+      };
+    }
 
     function uploadPackages(viewPath) {
       const ext = viewPath.slice(viewPath.lastIndexOf(".") + 1);
@@ -215,9 +222,7 @@
           ui.showModal(_("Uploading file…"), [progress, status]);
 
           const setProgress = function (loadedInFile) {
-            const percent = total
-              ? ((done + loadedInFile) / total) * 100
-              : 100;
+            const percent = total ? ((done + loadedInFile) / total) * 100 : 100;
 
             progress.setAttribute("title", percent.toFixed(2) + "%");
             progress.firstElementChild.style.width = percent.toFixed(2) + "%";
