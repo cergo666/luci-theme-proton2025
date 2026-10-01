@@ -4,6 +4,13 @@ All notable changes to luci-theme-proton2025. Source of truth: GitHub Releases.
 
 ## Unreleased
 
+## Fixes
+
+- **Temperature chart is no longer squashed on wide pages**
+  - The chart was drawn in a fixed 960x320 box and stretched to the page width (`preserveAspectRatio="none"`), so with a wide layout the lines flattened and the text was distorted
+  - It is now drawn 1:1 at the real size of the element and redrawn when the width changes (page-width setting, window resize), so lines and text keep their proportions
+  - With more than 4 sensors the inline end-of-line labels are not drawn (they overlapped); the sensor chips and the hover tooltip show the values
+
 ## Features
 
 - **Install several packages at once on System → Software**
