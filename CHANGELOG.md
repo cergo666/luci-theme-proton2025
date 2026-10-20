@@ -2,6 +2,76 @@
 
 All notable changes to luci-theme-proton2025. Source of truth: GitHub Releases.
 
+## [1.4.4.2]
+
+## Changes in version 1.4.4.2
+
+## Features
+
+- **Search from the keyboard: Ctrl/⌘+K or /** (idea from the Aurora command palette)
+  - Ctrl+K / ⌘K anywhere and `/` outside of text fields focus the header search; keys are left alone while a LuCI dialog is open
+
+- **Quick theme mode switch in the header** (as in Argon, Aurora and Glass)
+  - A button next to the search cycles Auto → Light → Dark; the icon and tooltip show the current mode, and the choice is stored on the router like the setting in the theme panel
+
+- **Add LuCI to the home screen** (as in Aurora and Footstrap)
+  - Web app manifest, PNG icons (including a maskable one for Android) and an apple-touch-icon; LuCI opens as a standalone window, iOS shows the router's hostname as the title. Browsers offer "Install" only over HTTPS; over HTTP a home-screen shortcut works
+
+## Fixes
+
+- **Package upload on System → Software did not work in 1.4.4** (regression of PR #89)
+  - The "Prepare 1.4.4" commit removed the `<script>` tag for `js/package-upload.js` from `header.ut`, so the multi-file upload and the unsigned `.apk` install never ran although the RPC module, the ACL and the script itself were shipped
+  - The tag is restored
+
+- **Updated third-party LuCI apps stayed cached in the browser** (fixes #84)
+  - The theme's `luci.js?v=` carrier tag set `L.env.resource_version` to the theme version only, so every module loaded through `L.require()` — including the view modules of other `luci-app-*` packages — was requested as `?v=<theme version>` and the browser kept serving the old copy after the app was updated
+  - The version now also carries `pkgs_update_time` (changes whenever any package is installed or updated), as stock LuCI does; on older LuCI without that variable it stays the theme version
+
+- **Search index: "cache persistence failed"** (fixes #65)
+  - uhttpd-mod-ubus rejects request bodies over 64 KiB, so once the index grew past ~30 pages saving it always failed with `Parse error`; ubus replies over ~1 MiB time out as well
+  - Large caches are now uploaded in chunks (`saveCacheChunk` + `commitCache`, size-checked and renamed atomically, 4 MiB cap) and always read in 256 KiB chunks (`loadCacheChunk`); `saveCache`/`loadCache` are kept for small payloads
+  - Tested on OpenWrt 25.12 with 40 pages / 676 entries (79 KB): saved and reloaded without errors
+
+- **Search index: "[page parse] Cannot read properties of null (reading 'querySelectorAll')"**
+  - The 16 s navigation timer of the indexing iframe kept running after the page had loaded, so on slow pages (mwan3, acme, realtime graphs) it removed the frame while the page was still rendering; the timer is now stopped on load and the render wait bounds the page
+
+- **Theme update from the settings could report a failure although it was installed**
+  - The package `postinst` restarted rpcd synchronously, i.e. inside the very `installUpdate` call that ran the package manager, so the reply was sometimes lost; rpcd and uhttpd are now restarted in the background 3 s later
+  - The downloaded package is checked against the sha256 digest GitHub lists for the release asset and refused on mismatch; the release is read as JSON and the asset URL is accepted only from this repository's release downloads
+  - A failed GitHub API request now mentions the 60 requests/hour limit instead of "Latest GitHub release not found"
+  - Version comparison now uses every part (1.4.4.1 is newer than 1.4.4) and drops the package release: on opkg the installed version is reported as `1.4.3-r1`, its last part parsed as NaN and no update was ever detected on ipk systems
+
+- **Temperature chart is no longer squashed on wide pages**
+  - The chart was drawn in a fixed 960x320 box and stretched to the page width (`preserveAspectRatio="none"`), so with a wide layout the lines flattened and the text was distorted
+  - It is now drawn 1:1 at the real size of the element and redrawn when the width changes (page-width setting, window resize)
+  - With more than 4 sensors the inline end-of-line labels are not drawn (they overlapped); the sensor chips and the hover tooltip show the values
+
+## Security
+
+- **Unused file permissions removed from the ACL**
+  - The read section granted `exec` on `/etc/init.d/*` and `/bin/pidof` and `read` on `/proc/cpuinfo`; the theme never uses them, but they let any user holding the theme's read ACL run e.g. `/etc/init.d/firewall stop` through `file.exec`
+
+## Cleanup
+
+- `menu-proton2025.core.js` removed: no template or module loads it, yet it shipped in every package (~43 KB on flash)
+- The Cyrillic Inter subset is preloaded only for Cyrillic interface languages (it was unused and triggered a console warning elsewhere)
+- No more per-page console message that client-side routing is off (the default state)
+- `CHANGELOG.md`, both READMEs and `luci.proton-temp` were committed with CRLF although `.gitattributes` requires LF, so every checkout showed them as modified; normalized to LF
+
+## Build
+
+- Asset version (`__pv`) and package version bumped to 1.4.4.2
+- **CI builds take under a minute instead of 15–27 minutes**
+  - The theme compiles nothing, but the SDK built its whole dependency tree from source (luci-base, uhttpd, ucode, ubus…); packages are now built with `NO_DEPS=1` after compiling only the luci-base host tools (`jsmin`, `po2lmo`), and the resulting ipk/apk are byte-identical to the full build
+  - Only the luci feed is fetched; the SDK archive and the feed clone are cached; apk is built with the 25.12.5 release SDK instead of the moving snapshot SDK
+  - The job fails if minification left `*.js.o`/`*.css.o` files in the package
+
+## Authors
+
+- @cergo666
+
+---
+
 ## [1.4.4]
 
 ## Changes in version 1.4.4
