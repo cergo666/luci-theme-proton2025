@@ -2,6 +2,29 @@
 
 All notable changes to luci-theme-proton2025. Source of truth: GitHub Releases.
 
+## [1.4.4.6]
+
+## Changes in version 1.4.4.6
+
+## Features
+
+- **Glassmorphism / Frosted Glass effect**
+  - Modern frosted glass visual style for cards, CBI sections, modal dialogs, dropdown menus, search results, and navigation submenus
+  - Linked to the existing "Transparency" setting (`proton2025.settings.transparency`): when disabled, elements retain crisp 100% solid backgrounds with zero GPU overhead
+  - Nested sections and sections inside modals are automatically flattened to eliminate double-blur rendering artifacts and GPU load
+  - Fixed CSS stacking context for open dropdown menus inside blurred sections (`.cbi-section:has(.cbi-dropdown[open])`) to prevent clipping by sibling cards
+  - Dropdown list items feature translucent hover highlights on blurred backgrounds
+
+## Build
+
+- Asset version (`__pv`) and package version bumped to 1.4.4.6
+
+## Authors
+
+- @cergo666
+
+---
+
 ## [1.4.4.5]
 
 ## Changes in version 1.4.4.5
