@@ -9178,6 +9178,200 @@ body.modal-overlay-active #modal_overlay {
     --proton-menu-bg: rgba(255, 255, 255, 0.86);
 }
 
+/* Glassmorphism: CBI Sections and Settings Cards */
+.proton-transparency .cbi-section,
+.proton-transparency .proton-settings-card {
+    background: rgba(22, 28, 38, 0.72) !important;
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.proton-transparency .cbi-section:hover,
+.proton-transparency .proton-settings-card:hover {
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Glassmorphism with pattern background */
+html[class*="proton-pattern-"].proton-transparency .cbi-section,
+html[class*="proton-pattern-"].proton-transparency .proton-settings-card {
+    background:
+        linear-gradient(180deg, rgba(var(--proton-accent-rgb), 0.05) 0%, rgba(var(--proton-accent-rgb), 0.1) 100%),
+        rgba(22, 28, 38, 0.72) !important;
+}
+
+/* Light mode cards */
+:root[data-theme="light"].proton-transparency .cbi-section,
+:root[data-theme="light"].proton-transparency .proton-settings-card {
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+:root[data-theme="light"].proton-transparency .cbi-section:hover,
+:root[data-theme="light"].proton-transparency .proton-settings-card:hover {
+    border-color: rgba(0, 0, 0, 0.14);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+:root[data-theme="light"][class*="proton-pattern-"].proton-transparency .cbi-section,
+:root[data-theme="light"][class*="proton-pattern-"].proton-transparency .proton-settings-card {
+    background:
+        linear-gradient(180deg, rgba(var(--proton-accent-rgb), 0.05) 0%, rgba(var(--proton-accent-rgb), 0.1) 100%),
+        rgba(255, 255, 255, 0.75) !important;
+}
+
+/* Flatten nested sections so multiple blurs don't stack */
+.proton-transparency .cbi-section .cbi-section,
+:root[data-theme="light"].proton-transparency .cbi-section .cbi-section {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0;
+}
+
+/* Glassmorphism: Modal Dialogs */
+.proton-transparency #modal_overlay > .modal {
+    background: rgba(18, 23, 33, 0.84) !important;
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="light"].proton-transparency #modal_overlay > .modal {
+    background: rgba(255, 255, 255, 0.86) !important;
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Flatten sections inside modals to prevent nested blur performance issues */
+.proton-transparency #modal_overlay .cbi-section {
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: none !important;
+}
+
+:root[data-theme="light"].proton-transparency #modal_overlay .cbi-section {
+    background: rgba(0, 0, 0, 0.02) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: none !important;
+}
+
+/* Glassmorphism: Dropdown menus */
+.proton-transparency .cbi-dropdown[open] > ul {
+    background: rgba(18, 23, 33, 0.88) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.proton-transparency .cbi-dropdown[open] > ul.dropdown > li {
+    background: transparent !important;
+}
+
+.proton-transparency .cbi-dropdown[open] > ul.dropdown > li:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.proton-transparency .cbi-dropdown[open] > ul.dropdown > li[selected] {
+    background: rgba(var(--proton-accent-rgb), 0.18) !important;
+    color: var(--proton-accent) !important;
+}
+
+:root[data-theme="light"].proton-transparency .cbi-dropdown[open] > ul {
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"].proton-transparency .cbi-dropdown[open] > ul.dropdown > li {
+    background: transparent !important;
+}
+
+:root[data-theme="light"].proton-transparency .cbi-dropdown[open] > ul.dropdown > li:hover {
+    background: rgba(0, 0, 0, 0.05) !important;
+}
+
+:root[data-theme="light"].proton-transparency .cbi-dropdown[open] > ul.dropdown > li[selected] {
+    background: rgba(var(--proton-accent-rgb), 0.12) !important;
+    color: var(--proton-accent) !important;
+}
+
+/* Lift section stacking context when a dropdown is open inside it */
+.cbi-section:has(.cbi-dropdown[open]) {
+    z-index: 50;
+    position: relative;
+}
+
+/* Glassmorphism: Top navigation submenus */
+.proton-transparency #mainmenu li > ul {
+    background: rgba(18, 23, 33, 0.84) !important;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="light"].proton-transparency #mainmenu li > ul {
+    background: rgba(255, 255, 255, 0.88) !important;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* Glassmorphism: Search popup */
+.proton-transparency .proton-search-results {
+    background: rgba(18, 23, 33, 0.84) !important;
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 2px solid var(--proton-accent);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="light"].proton-transparency .proton-search-results {
+    background: rgba(255, 255, 255, 0.88) !important;
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-top: 2px solid var(--proton-accent);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+}
+
+/* Glassmorphism: Login card */
+.proton-transparency .login-card {
+    background: rgba(22, 28, 38, 0.76) !important;
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="light"].proton-transparency .login-card {
+    background: rgba(255, 255, 255, 0.82) !important;
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
 @media print {
     #menubar, #mainmenu, #modemenu, .proton-footer, .cbi-page-actions {
         display: none !important;
