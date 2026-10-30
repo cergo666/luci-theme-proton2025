@@ -2,6 +2,51 @@
 
 All notable changes to luci-theme-proton2025. Source of truth: GitHub Releases.
 
+## [1.4.5.2]
+
+## Changes in version 1.4.5.2
+
+## Features
+
+- **Theme updates install in the background with progress and a log**
+  - "Install Update" no longer waits for the whole install inside one request: the router downloads the package, checks its size and sha256 against the release and installs it in a separate background process
+  - The theme settings show the current step, download progress and the install log, and offer a page reload when done
+  - Reloading the page during an update picks it up again; only one update runs at a time, and downgrades or reinstalling the same version are refused
+  - New strings are translated in all 9 locales
+
+- **Dark luci-app-statistics graphs in dark mode** (#76, item 5)
+  - The rrdtool graphs stayed bright white; in dark mode their background and text turn dark while the line colours keep their hue. On phones the graphs shrink to the screen width
+
+## Fixes
+
+- **Network table actions are no longer folded for no reason**
+  - On Interfaces, Devices and Wireless the row buttons (Restart / Stop / Edit / Delete and so on) were always hidden in the ⋮ menu. On wide screens they are now shown inline and folded into ⋮ only when they do not fit
+
+- **The header did not fit between 801 and 1100 px**
+  - The top menu, the search and theme buttons and the "Refreshing" indicator caused horizontal page scrolling and cut the indicator off; the header now fits from 801 px up, in English and Russian
+
+- **Browsers could keep stale theme CSS/JS after an update**
+  - The static cache key is now the theme version plus the package database's modification time, so it changes on every install or upgrade even if the version was not bumped. Per-page stylesheets loaded on client-side navigation get the key too
+
+- **Sidebar sections collapsed inconsistently** (#76, item 4)
+  - The current page's section did not collapse when clicked, and closing another section re-opened it. Each click now toggles the section, in the side menu and in the mobile drawer
+
+- **Buttons touching each other on phones** (#76, item 6)
+  - Service-control buttons in https-dns-proxy, pbr and similar apps touched each other and the next row; they now have 6 px spacing
+
+- **Alerts covered the mobile menu**
+  - Floating alerts (e.g. "No password set") sat above the open menu drawer on phones and covered its first entries; they are hidden while the menu is open
+
+## Build
+
+- Asset and package version bumped to 1.4.5.2
+
+## Authors
+
+- @cergo666
+
+---
+
 ## [1.4.5]
 
 ## Changes in version 1.4.5

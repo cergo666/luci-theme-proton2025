@@ -248,7 +248,7 @@ body.login-page { background-color: {{ serverTheme === 'light' ? '#ffffff' : '#0
    пакетов). Он меняется при любой установке или обновлении пакета, поэтому
    после обновления темы браузер берёт свежие CSS/JS, даже если версию ниже
    забыли поднять (так случилось в 1.4.4). В старом LuCI переменной нет. #}
-{% let __pv = "1.4.5" + (pkgs_update_time ? '-' + pkgs_update_time : ''); %}
+{% let __pv = "1.4.5.2" + (pkgs_update_time ? '-' + pkgs_update_time : ''); %}
 <link rel="stylesheet" fetchpriority="high" href="{{ media }}/css/cascade.css?v={{ __pv }}" />
 <link rel="stylesheet" href="{{ media }}/css/login-bg.css?v={{ __pv }}" />
 
